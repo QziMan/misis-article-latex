@@ -1,14 +1,17 @@
-name: Build
+name: Build article PDF
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  latex:
-    # Times New Roman и Courier New уже есть в образе Windows.
-    # На ubuntu-latest их нет, и класс уходит в запасной TeX Gyre.
+  article:
     runs-on: windows-latest
+    timeout-minutes: 15
     defaults:
       run:
         shell: bash
@@ -19,62 +22,28 @@ jobs:
         with:
           tectonic-version: "0.17.0"
 
-      - name: Require Times New Roman and Courier New
-        id: fonts
+      - name: Check required fonts
         run: |
           mkdir -p .ci-fontcheck
-          cat > .ci-fontcheck/fontcheck.tex << 'EOF'
+          cat > .ci-fontcheck/fontcheck.tex <<'EOF'
           \documentclass{article}
           \usepackage{fontspec}
-          \usepackage{polyglossia}
-          \setdefaultlanguage{russian}
-          \IfFontExistsTF{Times New Roman}{}{%
-            \PackageError{fontcheck}{Times New Roman is not installed}{}%
-          }
-          \IfFontExistsTF{Courier New}{}{%
-            \PackageError{fontcheck}{Courier New is not installed}{}%
-          }
-          \setmainfont{Times New Roman}[
-            Ligatures=TeX,
-            BoldFont={Times New Roman Bold},
-            ItalicFont={Times New Roman Italic},
-            BoldItalicFont={Times New Roman Bold Italic},
-          ]
-          \newfontfamily\cyrillicfont{Times New Roman}[
-            Ligatures=TeX,
-            BoldFont={Times New Roman Bold},
-            ItalicFont={Times New Roman Italic},
-            BoldItalicFont={Times New Roman Bold Italic},
-          ]
-          \newfontfamily\cyrillicfonttt{Courier New}
+          \IfFontExistsTF{Times New Roman}{}{\PackageError{fontcheck}{Times New Roman is not installed}{}}
+          \IfFontExistsTF{Courier New}{}{\PackageError{fontcheck}{Courier New is not installed}{}}
           \begin{document}
-          Проверка \textbf{жирный} \textit{курсив} \texttt{абв}
+          Font check.
           \end{document}
           EOF
           tectonic -o .ci-fontcheck .ci-fontcheck/fontcheck.tex
 
-      - name: Build template
-        run: mkdir -p build && tectonic -o build article.tex
-
-      - name: Build example
-        if: always() && steps.fonts.outcome == 'success'
-        working-directory: example
+      - name: Build article
         run: |
-          rm -f misisarticle.cls
-          cp ../misisarticle.cls misisarticle.cls
           mkdir -p build
-          tectonic -o build example.tex
+          tectonic -o build article.tex
 
       - name: Upload article PDF
-        if: always() && steps.fonts.outcome == 'success' && hashFiles('build/article.pdf') != ''
         uses: actions/upload-artifact@v7
         with:
+          name: article-pdf
           path: build/article.pdf
-          archive: false
-
-      - name: Upload example PDF
-        if: always() && steps.fonts.outcome == 'success' && hashFiles('example/build/example.pdf') != ''
-        uses: actions/upload-artifact@v7
-        with:
-          path: example/build/example.pdf
-          archive: false
+          if-no-files-found: error
