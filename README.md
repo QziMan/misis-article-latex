@@ -1,5 +1,7 @@
 # Прогнозирование оттока цифровой подписки
 
+[![Build article PDF](https://github.com/QziMan/misis-article-latex/actions/workflows/build.yml/badge.svg)](https://github.com/QziMan/misis-article-latex/actions/workflows/build.yml)
+
 Научная статья Романа Алексеевича Даютова, НИТУ «МИСИС».
 
 Репозиторий: https://github.com/QziMan/misis-article-latex
@@ -41,3 +43,4 @@ tectonic -o build article.tex
 ## Происхождение шаблона
 
 Проект подготовлен на основе [sadekovlar/misis-article-latex](https://github.com/sadekovlar/misis-article-latex). Исходный класс `misisarticle.cls` сохранён без изменений. Лицензия класса: LPPL 1.3c или более поздняя. Настройка сборки адаптирована под одну статью.
+
